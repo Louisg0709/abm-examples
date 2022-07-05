@@ -109,7 +109,7 @@ class Bee(Agent):
     any other Boid.
     '''
     
-    def __init__(self, unique_id, model, pos, pollen=0, food=5, health=5, speed=5, heading=None,
+    def __init__(self, unique_id, model, pos, pollen=0, food=5, health=5, speed=1, heading=None,
                  vision=5, separation=1, atype=0):
         '''
         Create a new Bee flocker agent.
@@ -130,6 +130,9 @@ class Bee(Agent):
         self.speed = speed
         self.atype=atype
         self.honey=0
+        self.randomstateflag = 0
+        self.randomstatecycle =6
+        self.randomstatestep = 0
         self.model=model
         if heading is not None:
             self.heading = heading
@@ -149,7 +152,13 @@ class Bee(Agent):
             if neighbor.atype == 0:
                 center += np.array(neighbor.pos)
                 count = count +1
-        return center / count
+                
+        if count>0: 
+            heading=center / count
+        else:
+            heading=np.random.random(2)
+            heading/=np.linalg.norm(heading)
+        return np.int64(heading)
     
     def cohereplant(self, neighbors):
         '''
@@ -158,28 +167,56 @@ class Bee(Agent):
 
         center = np.array([0.0, 0.0])
         count=0
+        nsep=9e99
+        nhead=np.random.random(2)
         for neighbor in neighbors:
             if neighbor.atype == 1:
-                center += np.array(neighbor.pos)
+                sepv = np.int64(np.array(neighbor.pos)-self.pos)
+                sep=np.linalg.norm(sepv)
+                if sep<nsep:
+                    nsep=sep
+                    nhead=sepv
                 count = count +1
-        return center / count
+ 
+
+        
+        if count<=0: 
+            nhead=np.random.random(2)
+            nhead/=np.linalg.norm(nhead)
+        return nhead
+          
+        
 
     def coherequeen(self, neighbors):
         '''
-        Return the vector toward the center of mass of the local neighbors.
+        Return the vector toward the locationn of the nearest queen.
         '''
 
         center = np.array([0.0, 0.0])
         count=0
+        nsep=9e99
+        nhead=np.random.random(2)
         for neighbor in neighbors:
             if neighbor.atype == 2:
-                center += np.array(neighbor.pos)
+                sepv = np.int64(np.array(neighbor.pos)-self.pos)
+                sep=np.linalg.norm(sepv)
+                if sep<nsep:
+                    nsep=sep
+                    nhead=sepv
                 count = count +1
-        return center / count
+                
+        if count<=0: 
+            nhead=np.random.random(2)
+            nhead/=np.linalg.norm(nhead)
+        return nhead
+       
+        
+
     
     def separate(self, neighbors):
         '''
-        Return a vector away from any neighbors closer than separation dist.
+        Return a vector away from any neighbors closer than separation dist. Only do this if not another bee
+        and if not near a plant or a queen
         '''
         my_pos = np.array(self.pos)
         sep_vector = np.array([0, 0])
@@ -189,7 +226,7 @@ class Bee(Agent):
                 dist = np.linalg.norm(my_pos - their_pos)
                 if dist < self.separation:
                     sep_vector -= np.int64(their_pos - my_pos)
-        return sep_vector
+        return np.int64(sep_vector)
 
 
     def step(self):
@@ -198,18 +235,43 @@ class Bee(Agent):
         '''
 
         neighbors = self.model.space.get_neighbors(self.pos, self.vision, False)
+
         
-        #need to check the heading very carefully as this is resulting in nan values!!@!!!!!!
         if len(neighbors) > 0:
-            cohere_vector = self.cohere(neighbors)
-            if self.honey < 2:
-                cohere_vector=self.coherequeen(neighbors)
+            cohere_vector = np.int64(self.cohere(neighbors))
+            separate_vector = np.int64(self.separate(neighbors))
+            self.heading += np.int64((cohere_vector +
+                             separate_vector ))
+            self.heading = np.int64(self.heading)/np.int64(np.linalg.norm(self.heading))
+        
+        
+        
+        #need to check the heading very carefully as this is resulting in nan values!!@!!!!!!            
+        if len(neighbors) > 0:
             if self.pollen < 1:
-                cohere_vector=self.cohereplant(neighbors)
-            separate_vector = self.separate(neighbors)
-            self.heading += (cohere_vector +
-                             separate_vector )
-            self.heading /= np.linalg.norm(self.heading)
+                self.heading=self.cohereplant(neighbors)
+            if self.honey < 2:
+                self.heading=self.coherequeen(neighbors)
+
+            
+   
+        #put the bee into a random search
+        if np.random.random(1)>0.9 and self.randomstateflag == 0:
+            self.randomstateflag=1
+            self.randomstatestep=0
+            
+           
+        if self.randomstateflag == 1:
+            self.randomstatestep += 1
+            if self.randomstatestep>self.randomstatecycle:
+                self.randomstateflag=0
+                self.randomstatestep=0
+            heading=np.random.random(2)
+            heading/=np.linalg.norm(heading)
+            self.heading=heading
+        
+            
+        
         new_pos = np.array(self.pos) + self.heading * self.speed
         new_x, new_y = new_pos
         if math.isnan(new_x) or math.isnan(new_y):
