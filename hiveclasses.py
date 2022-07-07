@@ -66,10 +66,11 @@ class HiveModel(Model):
             x = random.random() * self.space.x_max
             y = random.random() * self.space.y_max
             pos = (x, y)
-            heading = np.random.random(2) * 2 - np.array((1, 1))
-            heading /= np.linalg.norm(heading)
-            bee = Bee(i, self, pos, 0, 0,5,self.speed, heading, self.vision,
-                        self.bseparation)
+            ang=2*math.pi*np.random.random(1)
+            heading=np.array((math.cos(ang),math.sin(ang)))
+            #heading = np.random.random(2) * 2 - np.array((1, 1))
+            #heading /= np.linalg.norm(heading)
+            bee = Bee(i, self, pos, 0, 0,5,self.speed, heading, self.vision,self.bseparation)
             self.space.place_agent(bee, pos)
             self.schedule.add(bee)
         for i in range(self.NP):
@@ -109,7 +110,7 @@ class Bee(Agent):
     any other Boid.
     '''
     
-    def __init__(self, unique_id, model, pos, pollen=0, food=5, health=5, speed=1, heading=None,
+    def __init__(self, unique_id, model, pos, pollen=0, food=5, health=5, speed=0.1, heading=None,
                  vision=5, separation=1, atype=0):
         '''
         Create a new Bee flocker agent.
@@ -137,8 +138,13 @@ class Bee(Agent):
         if heading is not None:
             self.heading = heading
         else:
-            self.heading = np.random.random(2)
-            self.heading /= np.linalg.norm(self.heading)
+            ang=2*math.pi*np.random.random(1)
+            self.heading=np.array((math.cos(ang),math.sin(ang)))
+            #self.heading = 2*np.random.random(2)
+            #center = np.array([-1, -1])
+            #self.heading+=np.float64(center)
+            #self.heading /= np.linalg.norm(self.heading)
+
         self.vision = vision
         self.separation = separation
 
@@ -156,9 +162,13 @@ class Bee(Agent):
         if count>0: 
             heading=center / count
         else:
-            heading=np.random.random(2)
-            heading/=np.linalg.norm(heading)
-        return np.int64(heading)
+            ang=2*math.pi*np.random.random(1)
+            heading=np.array((math.cos(ang),math.sin(ang)))
+            #heading=2*np.random.random(2)
+            #center = np.array([-1, -1])
+            #self.heading+=np.float64(center)            
+            #heading/=np.linalg.norm(heading)
+        return np.float64(heading)
     
     def cohereplant(self, neighbors):
         '''
@@ -171,18 +181,20 @@ class Bee(Agent):
         nhead=np.random.random(2)
         for neighbor in neighbors:
             if neighbor.atype == 1:
-                sepv = np.int64(np.array(neighbor.pos)-self.pos)
+                sepv = np.float64(np.array(neighbor.pos)-self.pos)
                 sep=np.linalg.norm(sepv)
                 if sep<nsep:
                     nsep=sep
                     nhead=sepv
                 count = count +1
  
-
-        
         if count<=0: 
-            nhead=np.random.random(2)
-            nhead/=np.linalg.norm(nhead)
+            ang=2*math.pi*np.random.random(1)
+            nhead=np.array((math.cos(ang),math.sin(ang)))
+            #nhead=2*np.random.random(2)
+            #center = np.array([-1, -1])
+            #self.heading+=np.float64(center)            
+            #nhead/=np.linalg.norm(nhead)
         return nhead
           
         
@@ -198,7 +210,7 @@ class Bee(Agent):
         nhead=np.random.random(2)
         for neighbor in neighbors:
             if neighbor.atype == 2:
-                sepv = np.int64(np.array(neighbor.pos)-self.pos)
+                sepv = np.float64(np.array(neighbor.pos)-self.pos)
                 sep=np.linalg.norm(sepv)
                 if sep<nsep:
                     nsep=sep
@@ -206,8 +218,13 @@ class Bee(Agent):
                 count = count +1
                 
         if count<=0: 
-            nhead=np.random.random(2)
-            nhead/=np.linalg.norm(nhead)
+            #nhead=2*np.random.random(2)
+            #center = np.array([-1, -1])
+            #self.heading+=np.float64(center)            
+            #nhead/=np.linalg.norm(nhead)
+            ang=2*math.pi*np.random.random(1)
+            nhead=np.array((math.cos(ang),math.sin(ang)))
+
         return nhead
        
         
@@ -218,15 +235,15 @@ class Bee(Agent):
         Return a vector away from any neighbors closer than separation dist. Only do this if not another bee
         and if not near a plant or a queen
         '''
-        my_pos = np.array(self.pos)
-        sep_vector = np.array([0, 0])
+        my_pos = np.float64(np.array(self.pos))
+        sep_vector = np.float64(np.array([0, 0]))
         for neighbor in neighbors:
             if neighbor.atype == 0:
-                their_pos = np.array(neighbor.pos)
+                their_pos = np.float64(np.array(neighbor.pos))
                 dist = np.linalg.norm(my_pos - their_pos)
                 if dist < self.separation:
-                    sep_vector -= np.int64(their_pos - my_pos)
-        return np.int64(sep_vector)
+                    sep_vector -= np.float64(their_pos - my_pos)
+        return np.float64(sep_vector)
 
 
     def step(self):
@@ -238,20 +255,21 @@ class Bee(Agent):
 
         
         if len(neighbors) > 0:
-            cohere_vector = np.int64(self.cohere(neighbors))
-            separate_vector = np.int64(self.separate(neighbors))
-            self.heading += np.int64((cohere_vector +
+            cohere_vector = np.float64(self.cohere(neighbors))
+            separate_vector = np.float64(self.separate(neighbors))
+            self.heading += np.float64((cohere_vector +
                              separate_vector ))
-            self.heading = np.int64(self.heading)/np.int64(np.linalg.norm(self.heading))
+            self.heading = np.float64(self.heading)/np.int64(np.linalg.norm(self.heading))
         
         
         
         #need to check the heading very carefully as this is resulting in nan values!!@!!!!!!            
         if len(neighbors) > 0:
-            if self.pollen < 1:
-                self.heading=self.cohereplant(neighbors)
-            if self.honey < 2:
+            if self.honey < 2 and self.pollen>1:
                 self.heading=self.coherequeen(neighbors)
+            if self.pollen <= 1 and self.honey>2:
+                self.heading=self.cohereplant(neighbors)
+
 
             
    
@@ -266,17 +284,29 @@ class Bee(Agent):
             if self.randomstatestep>self.randomstatecycle:
                 self.randomstateflag=0
                 self.randomstatestep=0
-            heading=np.random.random(2)
-            heading/=np.linalg.norm(heading)
-            self.heading=heading
+            ang=2*math.pi*np.random.random(1)
+            self.heading=np.array((math.cos(ang),math.sin(ang)))
+            #heading=np.random.random(2)
+            #heading/=np.linalg.norm(heading)
+            #self.heading=heading
         
+        #heading=np.random.random(2)
+        #center = np.array([-1, -1])
+        #self.heading+=np.int64(center)
+        #heading/=np.linalg.norm(heading)
+        #self.heading=heading
+        #self.speed=0.1
+        
+
             
         
         new_pos = np.array(self.pos) + self.heading * self.speed
         new_x, new_y = new_pos
         if math.isnan(new_x) or math.isnan(new_y):
             print("nan pos detected ")
-            self.heading = np.random.random(2)
+            ang=2*math.pi*np.random.random(1)
+            self.heading=np.array((math.cos(ang),math.sin(ang)))
+            #self.heading = np.random.random(2)
             new_pos = np.array(self.pos) + self.heading * self.speed
             new_x, new_y = new_pos
         else:
@@ -336,12 +366,12 @@ class Plant(Agent):
                 if dist < self.separation:
                     #print("pollen transfer", self.pollen, neighbor.pollen)
                     if self.pollen > 0:
-                        neighbor.pollen = neighbor.pollen + 10
-                        self.pollen = self.pollen - 10
-                        if self.pollen > 0 and neighbor.pollen>0:
-                            neighbor.speed=0
+                        neighbor.pollen = neighbor.pollen + 2
+                        self.pollen = self.pollen - 2
+                        if self.pollen > 0 and neighbor.pollen<5:
+                            neighbor.speed=0.05
                         else:
-                            neighbor.speed=1
+                            neighbor.speed=0.1
                         #print ('Pollen transfered', self.pollen, neighbor.pollen)
         
         if self.model.time % 30 == 0:
@@ -410,7 +440,7 @@ class Queen(Agent):
                         if neighbor.pollen>0:
                             neighbor.speed = 0
                         else: 
-                            neighbor.speed = 1
+                            neighbor.speed = 0.2
     
         #calculate number of workers near and use to make honey
         if nworkers>0:
