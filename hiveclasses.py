@@ -274,7 +274,7 @@ class Bee(Agent):
             
    
         #put the bee into a random search
-        if np.random.random(1)>0.9 and self.randomstateflag == 0:
+        if np.random.random(1)>0.8 and self.randomstateflag == 0:
             self.randomstateflag=1
             self.randomstatestep=0
             
@@ -296,6 +296,10 @@ class Bee(Agent):
         #heading/=np.linalg.norm(heading)
         #self.heading=heading
         #self.speed=0.1
+
+        #ang=2*math.pi*np.random.random(1)
+        #self.heading=np.array((math.cos(ang),math.sin(ang)))
+
         
 
             
@@ -371,7 +375,7 @@ class Plant(Agent):
                         if self.pollen > 0 and neighbor.pollen<5:
                             neighbor.speed=0.05
                         else:
-                            neighbor.speed=0.1
+                            neighbor.speed=0.5
                         #print ('Pollen transfered', self.pollen, neighbor.pollen)
         
         if self.model.time % 30 == 0:
@@ -440,7 +444,7 @@ class Queen(Agent):
                         if neighbor.pollen>0:
                             neighbor.speed = 0
                         else: 
-                            neighbor.speed = 0.2
+                            neighbor.speed = 0.1
     
         #calculate number of workers near and use to make honey
         if nworkers>0:
