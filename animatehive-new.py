@@ -67,7 +67,7 @@ def draw_boids(model):
 # In[343]:
 
 #np,nb,nq,width,height
-model = HiveModel(10, 50, 3, 100, 100, speed=1, vision=2, pseparation=4, bseparation=1, qseparation=10)
+model = HiveModel(50, 500, 3, 100, 100, speed=1, vision=2, pseparation=4, bseparation=1, qseparation=10)
 
 model.step
 

@@ -134,6 +134,7 @@ class Bee(Agent):
         self.randomstateflag = 0
         self.randomstatecycle =6
         self.randomstatestep = 0
+        self.stepswithqueen=0
         self.model=model
         if heading is not None:
             self.heading = heading
@@ -229,17 +230,16 @@ class Bee(Agent):
     
     
     def staywithqueen(self, neighbors):
+        stay=0
         for neighbor in neighbors:
             if neighbor.atype == 2:
                 my_pos=self.pos
                 their_pos = np.float64(np.array(neighbor.pos))
                 dist = np.linalg.norm(my_pos - their_pos)
                 if dist <= 15:
-                    self.speed = 0
-                    self.stepswaited = self.stepswaited+1
-#                    if self.stepswaited
+                    stay=1
                    
-        return None
+        return stay
 
     
     def separate(self, neighbors):
@@ -283,8 +283,6 @@ class Bee(Agent):
                 self.heading=self.cohereplant(neighbors)
 
 
-        if len(neighbors) > 0:
-            self.staywithqueen(neighbors)
    
         #put the bee into a random search
         if np.random.random(1)>0.8 and self.randomstateflag == 0:
@@ -299,6 +297,19 @@ class Bee(Agent):
                 self.randomstatestep=0
             ang=2*math.pi*np.random.random(1)
             self.heading=np.array((math.cos(ang),math.sin(ang)))
+            
+        if len(neighbors) > 0:
+            stay=self.staywithqueen(neighbors)
+            if stay==1:
+                if self.stepswithqueen>10:
+                    self.speed=0.5
+                    self.stepswithqueen=0
+                else:
+                    self.speed=0
+                    self.stepswithqueen+=1
+            
+            
+            
             #heading=np.random.random(2)
             #heading/=np.linalg.norm(heading)
             #self.heading=heading
@@ -366,6 +377,7 @@ class Plant(Agent):
         self.atype = atype
         self.vision = vision
         self.time = 0
+        self.numneighbours=0
 
 
     def step(self):
@@ -376,6 +388,16 @@ class Plant(Agent):
         neighbors = self.model.space.get_neighbors(self.pos, self.vision, False)
         time=self.model.time
         my_pos = np.array(self.pos)
+        self.numneighbours=0
+        for neighbor in neighbors:
+            if neighbor.atype == 0:
+                their_pos = np.array(neighbor.pos)
+                dist = np.linalg.norm(my_pos - their_pos)
+                #self.separation=8
+                #print (" before transfer", dist, self.separation)
+                if dist < self.separation:
+                    self.numneighbours+=1        
+        
         for neighbor in neighbors:
             if neighbor.atype == 0:
                 their_pos = np.array(neighbor.pos)
@@ -387,7 +409,7 @@ class Plant(Agent):
                     if self.pollen > 0:
                         neighbor.pollen = neighbor.pollen + 2
                         self.pollen = self.pollen - 2
-                        if self.pollen > 0 and neighbor.pollen<5:
+                        if self.pollen > 0 and neighbor.pollen<5 and self.numneighbours<2:
                             neighbor.speed=0.05
                         else:
                             neighbor.speed=0.5
@@ -444,22 +466,23 @@ class Queen(Agent):
             if neighbor.atype == 0:
                 their_pos = np.array(neighbor.pos)
                 dist = np.linalg.norm(my_pos - their_pos)
-                if dist < self.separation:
+                if dist < 15:
                     nworkers=nworkers+1
                     health=health+neighbor.health
                     if neighbor.pollen > 0:
                         neighbor.pollen = neighbor.pollen - 1
                         self.pollen = self.pollen + 1
-                if dist < self.separation:
+                if dist < 15:
+                    nworkers=nworkers+1
                     print("Honey before",self.honey, neighbor.honey)
-                    if self.honey > 0:
-                        neighbor.honey = neighbor.honey + 1
-                        self.honey = self.honey - 1
-                        print("honey given", self.honey, neighbor.honey, self.unique_id)
-                        if neighbor.pollen>0:
-                            neighbor.speed = 0
-                        else: 
-                            neighbor.speed = 0.1
+                    #if self.honey > 0:
+                    neighbor.honey = neighbor.honey + 1
+                    self.honey = self.honey - 1
+                    print("honey given", self.honey, neighbor.honey, self.unique_id)
+                    if neighbor.pollen>0:
+                        neighbor.speed = 0
+                    else: 
+                        neighbor.speed = 0.1
     
         #calculate number of workers near and use to make honey
         if nworkers>0:
