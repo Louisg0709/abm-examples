@@ -226,8 +226,20 @@ class Bee(Agent):
             nhead=np.array((math.cos(ang),math.sin(ang)))
 
         return nhead
-       
-        
+    
+    
+    def staywithqueen(self, neighbors):
+        for neighbor in neighbors:
+            if neighbor.atype == 2:
+                my_pos=self.pos
+                their_pos = np.float64(np.array(neighbor.pos))
+                dist = np.linalg.norm(my_pos - their_pos)
+                if dist <= 15:
+                    self.speed = 0
+                    self.stepswaited = self.stepswaited+1
+#                    if self.stepswaited
+                   
+        return None
 
     
     def separate(self, neighbors):
@@ -271,7 +283,8 @@ class Bee(Agent):
                 self.heading=self.cohereplant(neighbors)
 
 
-            
+        if len(neighbors) > 0:
+            self.staywithqueen(neighbors)
    
         #put the bee into a random search
         if np.random.random(1)>0.8 and self.randomstateflag == 0:
@@ -300,7 +313,7 @@ class Bee(Agent):
         #ang=2*math.pi*np.random.random(1)
         #self.heading=np.array((math.cos(ang),math.sin(ang)))
 
-        
+        #Making bees go still for a while when near queen
 
             
         
@@ -323,6 +336,8 @@ class Bee(Agent):
             if new_y<self.model.space.y_min:
                 new_y=self.model.space.y_max
             self.model.space.move_agent(self, (new_x, new_y))
+            
+ 
             
 class Plant(Agent):
     '''
