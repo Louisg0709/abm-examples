@@ -256,6 +256,25 @@ class Bee(Agent):
                 if dist < self.separation:
                     sep_vector -= np.float64(their_pos - my_pos)
         return np.float64(sep_vector)
+    
+    def randommove(self):
+
+        #put the bee into a random search
+        if np.random.random(1)>0.8 and self.randomstateflag == 0:
+            self.randomstateflag=1
+            self.randomstatestep=0
+            
+           
+        if self.randomstateflag == 1:
+            self.randomstatestep += 1
+            if self.randomstatestep>self.randomstatecycle:
+                self.randomstateflag=0
+                self.randomstatestep=0
+            ang=2*math.pi*np.random.random(1)
+            self.heading=np.array((math.cos(ang),math.sin(ang)))        
+        
+        return None
+    
 
 
     def step(self):
@@ -284,10 +303,12 @@ class Bee(Agent):
 
 
    
-        #put the bee into a random search
-        if np.random.random(1)>0.8 and self.randomstateflag == 0:
-            self.randomstateflag=1
-            self.randomstatestep=0
+
+            
+        #rule to set random heading for the bees
+        self.randommove()    
+            
+    
             
            
         if self.randomstateflag == 1:
@@ -307,24 +328,7 @@ class Bee(Agent):
                 else:
                     self.speed=0
                     self.stepswithqueen+=1
-            
-            
-            
-            #heading=np.random.random(2)
-            #heading/=np.linalg.norm(heading)
-            #self.heading=heading
         
-        #heading=np.random.random(2)
-        #center = np.array([-1, -1])
-        #self.heading+=np.int64(center)
-        #heading/=np.linalg.norm(heading)
-        #self.heading=heading
-        #self.speed=0.1
-
-        #ang=2*math.pi*np.random.random(1)
-        #self.heading=np.array((math.cos(ang),math.sin(ang)))
-
-        #Making bees go still for a while when near queen
 
             
         
