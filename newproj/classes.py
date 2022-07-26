@@ -110,7 +110,7 @@ class human(Agent):
     any other Boid.
     '''
     
-    def __init__(self, unique_id, model, pos, fruit=0, food=5, health=5, speed=0.1, heading=None,
+    def __init__(self, unique_id, model, pos, fruit=0, fruit=5, health=5, speed=0.1, heading=None,
                  vision=5, separation=1, atype=0):
         '''
         Create a new human flocker agent.
@@ -125,7 +125,7 @@ class human(Agent):
         '''
         super().__init__(unique_id, model)
         self.pos = pos
-        self.food = food
+        self.fruit = fruit
         self.health = health
         self.fruit = fruit
         self.speed = speed
@@ -427,16 +427,16 @@ class factory(Agent):
     '''
     A factory agent.
 
-    Uses fruit to make food
+    Uses fruit to make proccessedfood
     get fruit from human
-    factory make food
-    factory give food to human
+    factory make proccessedfood
+    factory give proccessedfood to human
 
     Separation is their desired minimum distance from
     any other Boid.
     '''
     
-    def __init__(self, unique_id, model, pos, fruit=5, honey=5, vision=5, separation=1, atype=2):
+    def __init__(self, unique_id, model, pos, proccessedfood=5, honey=5, vision=5, separation=1, atype=2):
         '''
         Create a new factory agent.
 
@@ -451,7 +451,7 @@ class factory(Agent):
         super().__init__(unique_id, model)
         self.pos = pos
         self.separation = separation
-        self.fruit = fruit
+        self.proccessedfood = proccessedfood
         self.honey = honey
         self.atype = atype
         self.vision = vision
@@ -475,7 +475,7 @@ class factory(Agent):
                     health=health+neighbor.health
                     if neighbor.fruit > 0:
                         neighbor.fruit = neighbor.fruit - 1
-                        self.fruit = self.fruit + 1
+                        self.proccessedfood = self.proccessedfood + 1
                 if dist < 15:
                     nworkers=nworkers+1
                     print("Honey before",self.honey, neighbor.honey)
@@ -490,9 +490,9 @@ class factory(Agent):
     
         #calculate number of workers near and use to make honey
         if nworkers>0:
-            if self.fruit>0:
-                self.honey=self.honey+self.fruit*(health/nworkers)
-                self.fruit=self.fruit-nworkers
+            if self.proccessedfood>0:
+                self.honey=self.honey+self.proccessedfood*(health/nworkers)
+                self.proccessedfood=self.proccessedfood-nworkers
             
 class creature(Agent):
     '''
@@ -507,7 +507,7 @@ class creature(Agent):
     any other Boid.
     '''
     
-    def __init__(self, unique_id, model, pos, pollen=0, food=5, health=5, speed=0.1, heading=None,
+    def __init__(self, unique_id, model, pos, fruit=0, fruit=5, health=5, speed=0.1, heading=None,
                  vision=5, separation=1, atype=0):
         '''
         Create a new creature flocker agent.
@@ -521,9 +521,9 @@ class creature(Agent):
         '''
         super().__init__(unique_id, model)
         self.pos = pos
-        self.food = food
+        self.fruit = fruit
         self.health = health
-        self.pollen = pollen
+        self.fruit = fruit
         self.speed = speed
         self.atype=atype
         self.honey=0
@@ -692,9 +692,9 @@ class creature(Agent):
         
         #need to check the heading very carefully as this is resulting in nan values!!@!!!!!!            
         if len(neighbors) > 0:
-            if self.honey < 2 and self.pollen>1:
+            if self.honey < 2 and self.fruit>1:
                 self.heading=self.coherequeen(neighbors)
-            if self.pollen <= 1 and self.honey>2:
+            if self.fruit <= 1 and self.honey>2:
                 self.heading=self.cohereplant(neighbors)
 
 
@@ -753,24 +753,24 @@ class creature(Agent):
 class Plant(Agent):
     '''
     A Plant agent.
-    Plant produes pollen creatures take pollen from plant
+    Plant produes fruit creatures take fruit from plant
     Separation is their desired minimum distance from
     any other Boid.
     '''
     
-    def __init__(self, unique_id, model, pos, pollen =5, vision = 2, separation=1, atype=1):
+    def __init__(self, unique_id, model, pos, fruit =5, vision = 2, separation=1, atype=1):
         '''
         Create a new Plant agent.
         Args:
             unique_id: Unique agent identifyer.
             pos: Starting position
             speed: Distance to move per step.
-            separation: Minimum distance to maintain from other Boids to give pollen.
+            separation: Minimum distance to maintain from other Boids to give fruit.
         '''
         super().__init__(unique_id, model)
         self.pos = pos
         self.separation = separation
-        self.pollen = 5
+        self.fruit = 5
         self.atype = atype
         self.vision = vision
         self.time = 0
@@ -802,17 +802,17 @@ class Plant(Agent):
                 #self.separation=8
                 #print (" before transfer", dist, self.separation)
                 if dist < self.separation:
-                    #print("pollen transfer", self.pollen, neighbor.pollen)
-                    if self.pollen > 0:
-                        neighbor.pollen = neighbor.pollen + 2
-                        self.pollen = self.pollen - 2
-                        if self.pollen > 0 and neighbor.pollen<5 and self.numneighbours<2:
+                    #print("fruit transfer", self.fruit, neighbor.fruit)
+                    if self.fruit > 0:
+                        neighbor.fruit = neighbor.fruit + 2
+                        self.fruit = self.fruit - 2
+                        if self.fruit > 0 and neighbor.fruit<5 and self.numneighbours<2:
                             neighbor.speed=0.05
                         else:
                             neighbor.speed=0.5
-                        #print ('Pollen transfered', self.pollen, neighbor.pollen)
+                        #print ('fruit transfered', self.fruit, neighbor.fruit)
         
         if self.model.time % 30 == 0:
-            #print("hooray more pollen")
-            self.pollen=self.pollen+random.random()/20
+            #print("hooray more fruit")
+            self.fruit=self.fruit+random.random()/20
 
