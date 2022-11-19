@@ -257,11 +257,8 @@ model = BoidModel(nagents+1, 200, 200, speed=2, vision=20, separation=2)
 
 
 #run the bounce ball step  
-for i in  range(3200):   
+for i in  range(200):   
     #    bounce(i,i*10)
     model.step()
     moveagent(model,i,i*10)
-
-
-    
 
